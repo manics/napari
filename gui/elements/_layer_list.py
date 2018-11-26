@@ -4,7 +4,7 @@ from collections.abc import Iterable, Sequence
 from vispy.util.event import EmitterGroup, Event
 from ..layers._base_layer import Layer
 
-from .qt import QtLayerPanel
+from .qt import QtLayerList
 
 
 class ItemEvent(Event):
@@ -47,7 +47,7 @@ class LayerList:
 
     def __init__(self, viewer=None):
         self._list = []
-        self._qt = QtLayerPanel(self)
+        self._qt = QtLayerList()
         self._viewer = None
         self.total = 0
         self.events = EmitterGroup(source=self,
@@ -297,7 +297,7 @@ class LayerList:
         """Callback when an item is added to set its order and viewer.
         """
         layer = event.item
-        self._qt.layersList.insert(event.index, len(self), layer)
+        self._qt.insert(event.index, len(self), layer)
         layer._order = -len(self)
         layer.viewer = self.viewer
 
@@ -306,7 +306,7 @@ class LayerList:
         and reset its order.
         """
         layer = event.item
-        self._qt.layersList.remove(layer)
+        self._qt.remove(layer)
         layer.viewer = None
         layer._order = 0
 
@@ -316,18 +316,7 @@ class LayerList:
         """
         for i in range(len(self)):
             self[i]._order = -i
-        self._qt.layersList.reorder()
+        self._qt.reorder(self)
         canvas = self.viewer._canvas
         canvas._draw_order.clear()
         canvas.update()
-
-    def remove_selected(self):
-        """Removes selected items from list.
-        """
-        to_delete = []
-        for i in range(len(self)):
-            if self[i].selected:
-                to_delete.append(i)
-        to_delete.reverse()
-        for i in to_delete:
-            self.pop(i)
